@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "zeebe-simple-monitor.fullname" . }}
+  labels:
+    app: {{ include "zeebe-simple-monitor.fullname" . }}
+    tag: {{ .Values.image.tag }}
+    {{- range $key, $value := .Values.labels }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "zeebe-simple-monitor.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "zeebe-simple-monitor.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "zeebe-simple-monitor.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8082
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 60
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 1
+          env:
+            - name: zeebe.client.broker.contactPoint
+              value: {{ .Values.global.zeebe.host }}:{{ .Values.global.zeebe.port }}
+            - name: zeebe.client.worker.hazelcast.connection
+              value: {{ .Values.global.hazelcast.host }}:{{ .Values.global.hazelcast.port }}
+          {{- with .Values.image.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.initContainer.enabled }}
+      initContainers:
+        - name: init-hazelcast
+          image: busybox
+          command: ['/bin/sh']
+          args: ['-c', 'until (printf "GET /hazelcast/health/node-state HTTP/1.1\r\nHost: {{ .Values.global.hazelcast.host }}\r\n\r\n";) | nc {{ .Values.global.hazelcast.host }} {{ .Values.global.hazelcast.port }}; do echo waiting for hazelcast; sleep 2; done']
+        - name: init-zeebe
+          image: busybox
+          command: ['/bin/sh']
+          args: ['-c', 'until (printf "GET /ready HTTP/1.1\r\nHost: {{ .Values.global.zeebe.host }}\r\n\r\n";) | nc {{ .Values.global.zeebe.host }} {{ .Values.global.zeebe.port }}; do echo waiting for zeebe; sleep 2; done']
+      {{- end }}
