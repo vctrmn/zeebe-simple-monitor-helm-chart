@@ -20,7 +20,7 @@ image:
 
 imagePullSecrets: []
 nameOverride: ""
-fullnameOverride: zeebe-simple-monitor
+fullnameOverride: "simple-monitor"
 
 labels: {}
 

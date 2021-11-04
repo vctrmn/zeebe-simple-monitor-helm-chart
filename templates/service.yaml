@@ -9,6 +9,8 @@ metadata:
     {{- end }}
 spec:
   type: {{ .Values.service.type }}
+  selector:
+    {{- include "zeebe-simple-monitor.selectorLabels" . | nindent 6 }}
   ports:
     - port: {{ .Values.service.port }}
       targetPort: http
