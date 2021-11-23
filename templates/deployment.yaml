@@ -54,21 +54,16 @@ spec:
           env:
             - name: zeebe.client.broker.contactPoint
               value: {{ .Values.global.zeebe.host }}:{{ .Values.global.zeebe.port }}
-            - name: zeebe.client.worker.hazelcast.connection
-              value: {{ .Values.global.hazelcast.host }}:{{ .Values.global.hazelcast.port }}
+            - name: ZEEBE_HOST
+              value: {{ .Values.global.zeebe.host }}
+            - name: ZEEBE_PORT
+              value: {{ .Values.global.zeebe.port }}
           {{- with .Values.image.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      {{- if .Values.initContainer.enabled }}
-      initContainers:
-        - name: init-hazelcast
-          image: busybox
-          command: ['/bin/sh']
-          args: ['-c', 'until (printf "GET /hazelcast/health/node-state HTTP/1.1\r\nHost: {{ .Values.global.hazelcast.host }}\r\n\r\n";) | nc {{ .Values.global.hazelcast.host }} {{ .Values.global.hazelcast.port }}; do echo waiting for hazelcast; sleep 2; done']
-        - name: init-zeebe
-          image: busybox
-          command: ['/bin/sh']
-          args: ['-c', 'until (printf "GET /ready HTTP/1.1\r\nHost: {{ .Values.global.zeebe.host }}\r\n\r\n";) | nc {{ .Values.global.zeebe.host }} {{ .Values.global.zeebe.port }}; do echo waiting for zeebe; sleep 2; done']
+      initContainers: 
+      {{- with .Values.initContainers }}
+        {{- toYaml .  | nindent 8 }}
       {{- end }}

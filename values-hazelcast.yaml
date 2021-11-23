@@ -14,7 +14,13 @@ image:
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: 1.0.0
-  env: []
+  env:
+    - name: zeebe.client.worker.hazelcast.connection
+      value: hazelcast:5701
+    - name: HAZELCAST_HOST
+      value: hazelcast
+    - name: HAZELCAST_PORT
+      value: 5701
 
 imagePullSecrets: []
 nameOverride: ""
@@ -22,8 +28,12 @@ fullnameOverride: "simple-monitor"
 
 labels: {}
 
-# Check for the presence of zeebe
+# Check for the presence of hazelcast and zeebe
 initContainers:
+  - name: init-hazelcast
+    image: busybox
+    command: ['/bin/sh']
+    args: ['-c', 'until (printf "GET /hazelcast/health/node-state HTTP/1.1\r\nHost: $HAZELCAST_HOST\r\n\r\n";) | nc $HAZELCAST_HOST $HAZELCAST_PORT; do echo waiting for hazelcast; sleep 2; done']
   - name: init-zeebe
     image: busybox
     command: ['/bin/sh']

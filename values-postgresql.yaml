@@ -14,7 +14,13 @@ image:
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: 1.0.0
-  env: []
+  env:
+    - name: spring.datasource.url
+      value: jdbc:postgresql://postgres-dev:5432/zeebe-monitor
+    - name: spring.datasource.driverClassName
+      value: org.postgresql.Driver
+    - name: spring.jpa.database-platform
+      value: org.hibernate.dialect.PostgreSQLDialect
 
 imagePullSecrets: []
 nameOverride: ""
@@ -22,7 +28,7 @@ fullnameOverride: "simple-monitor"
 
 labels: {}
 
-# Check for the presence of zeebe
+# Check for the presence of zeebe (to do: add initContainer for postgresql)
 initContainers:
   - name: init-zeebe
     image: busybox
