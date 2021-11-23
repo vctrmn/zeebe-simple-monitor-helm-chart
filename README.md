@@ -1,4 +1,4 @@
-# Zeebe Simple Monitor Helm Chart for Hazelcast
+# Zeebe Simple Monitor Helm Chart
 
 Helm chart for simple monitor, the monitoring application for [Zeebe](https://zeebe.io). It is designed for developers to
 * get in touch with Zeebe and workflow execution (BPMN)
