@@ -5,7 +5,7 @@ metadata:
   labels:
     app: {{ include "zeebe-simple-monitor.fullname" . }}
     {{- range $key, $value := .Values.labels }}
-    {{ $key }}: {{ $value | quote }}
+    {{ $key }}: {{ $value }}
     {{- end }}
 spec:
   type: {{ .Values.service.type }}

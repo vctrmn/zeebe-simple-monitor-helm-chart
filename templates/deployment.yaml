@@ -6,7 +6,7 @@ metadata:
     app: {{ include "zeebe-simple-monitor.fullname" . }}
     tag: {{ .Values.image.tag }}
     {{- range $key, $value := .Values.labels }}
-    {{ $key }}: {{ $value | quote }}
+    {{ $key }}: {{ $value }}
     {{- end }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
@@ -31,7 +31,7 @@ spec:
       serviceAccountName: {{ include "zeebe-simple-monitor.serviceAccountName" . }}
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
